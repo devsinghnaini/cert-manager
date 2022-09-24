@@ -1,0 +1,137 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI-Dev-Stage
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  pull_request:
+    branches: [ "integ" ]
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch: 
+
+env:
+  HELM_EXPERIMENTAL_OCI: '1'
+
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    name: Setup, Build
+    runs-on: ubuntu-latest
+    environment: Development    
+    
+    permissions:
+      contents: 'write'
+      id-token: 'write'
+      deployments: 'write'
+      packages: 'write'
+      security-events: 'write'
+      pull-requests: 'write'
+      actions: 'read'
+
+      # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+
+      - name: Checkout
+        uses: actions/checkout@v3  
+      - name: Set Swap Space
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 5       
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+       
+      - name: Extract public docker step and push to private ghrc repo
+        uses: CumulusDS/get-yaml-paths-action@v0.1.0
+        id: get_yaml_values
+        with:
+          file: charts/values-dev.yaml
+          imagetag: image.repository
+          imageversion: image.tag
+      - name: printing the current image repo and tag
+        run: |
+          echo "${{ steps.get_yaml_values.outputs.imagetag }}"
+          echo "${{ steps.get_yaml_values.outputs.imageversion }}"
+      - name: Push Image from public to private
+        uses: akhilerm/tag-push-action@v2.0.0
+        with:
+          src: ${{ steps.get_yaml_values.outputs.imagetag }}:${{ steps.get_yaml_values.outputs.imageversion  }} 
+          dst: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ steps.get_yaml_values.outputs.imageversion  }}
+      - name: Updating the values-dev.yaml with private ghrc image repo
+        uses: fjogeleit/yaml-update-action@main
+        with:
+          valueFile: 'charts/values-dev.yaml'
+          propertyPath: 'image.repository'
+          value: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
+          commitChange: false
+          updateFile: true   
+      - name: Updating the values-dev.yaml with private ghrc image tag
+        uses: fjogeleit/yaml-update-action@main
+        with:
+          valueFile: 'charts/values-dev.yaml'
+          propertyPath: 'image.tag'
+          value: ${{ steps.get_yaml_values.outputs.imageversion  }}
+          commitChange: false
+          updateFile: true     
+      - name: Install Kubescape
+        run: curl -s https://raw.githubusercontent.com/kubescape/kubescape/master/install.sh | /bin/bash
+
+      - uses: anchore/sbom-action@v0
+        with:
+          image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ steps.get_yaml_values.outputs.imageversion  }}
+          output-file: reports/dynamic-code-analysis/${{ github.event.repository.name }}-sbom.spdx.json
+      - name: Scan SBOM
+        uses: anchore/scan-action@v3
+        id: scan
+        with:
+          sbom: "reports/dynamic-code-analysis/${{ github.event.repository.name }}-sbom.spdx.json"
+          fail-build: true
+          severity-cutoff: critical
+      - name: Save Scan Report on SBOM
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
+          grype sbom:reports/dynamic-code-analysis/${{ github.event.repository.name }}-sbom.spdx.json --file reports/dynamic-code-analysis/${{ github.event.repository.name }}-scan-sbom.json 
+      - name: Remove File
+        run: rm -r .cache/*
+      - name: Scan YAML files
+        run: kubescape scan . > reports/kubernetes-security-compliance/helm-scan.txt
+      - name: Updating the chart yaml with repository name
+        uses: fjogeleit/yaml-update-action@main
+        with:
+          valueFile: 'charts/Chart.yaml'
+          propertyPath: 'name'
+          value: ${{ github.event.repository.name }}
+          commitChange: false
+          updateFile: true            
+      - name: Save SBOM, Scan report ,chart.yaml and Values-dev
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: upload scan report of sbom ,dast scan,kubescape scan and update values-dev,chart.yaml
+          file_pattern: '*.json *.yaml *.txt'
+          branch: ${{ github.head_ref }}  
+      - name: Get Chart Version and App Version from helm 
+        uses: CumulusDS/get-yaml-paths-action@v0.1.0
+        id: get_chart_yaml_values
+        with:
+          file: charts/Chart.yaml
+          appversion: appVersion
+          chartversion: version
+
+      - name: Chart | Push
+        uses: appany/helm-oci-chart-releaser@v0.3.0
+        with:
+          name: ${{ github.event.repository.name }}
+          repository: ${{ github.repository_owner }}/dev
+          tag: ${{ steps.get_chart_yaml_values.outputs.chartversion  }}-SNAPSHOT
+          path: charts/ # Default charts/{name}
+          registry: ghcr.io
+          registry_username: ${{ github.actor }}
+          registry_password: ${{ secrets.GITHUB_TOKEN }}

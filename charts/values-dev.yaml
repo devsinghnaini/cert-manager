@@ -1,0 +1,193 @@
+global:
+  imagePullSecrets: []
+  priorityClassName: ''
+  rbac:
+    create: true
+    aggregateClusterRoles: true
+  podSecurityPolicy:
+    enabled: false
+    useAppArmor: true
+  logLevel: 2
+  leaderElection:
+    namespace: kube-system
+installCRDs: false
+replicaCount: 1
+strategy: {}
+featureGates: ''
+image:
+  repository: ghcr.io/spartansdataplatform/datainfra-cert-manager
+  tag: v1.9.1
+  pullPolicy: Always
+clusterResourceNamespace: ''
+namespace: ''
+serviceAccount:
+  create: true
+  automountServiceAccountToken: true
+extraArgs: []
+extraEnv: []
+resources:
+  requests:
+    cpu: 10m
+    memory: 34Mi
+  limits:
+    cpu: $CPU
+    memory: $MEM
+securityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+volumes: []
+volumeMounts: []
+podLabels: {}
+nodeSelector:
+  kubernetes.io/os: linux
+ingressShim: {}
+prometheus:
+  enabled: true
+  servicemonitor:
+    enabled: false
+    prometheusInstance: default
+    targetPort: 9402
+    path: /metrics
+    interval: 60s
+    scrapeTimeout: 30s
+    labels: {}
+    annotations: {}
+    honorLabels: false
+affinity: {}
+tolerations: []
+topologySpreadConstraints: []
+webhook:
+  replicaCount: 1
+  timeoutSeconds: 10
+  config: null
+  strategy: {}
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+  extraArgs: []
+  resources:
+    requests:
+      cpu: 10m
+      memory: 34Mi
+    limits:
+      cpu: 50m
+      memory: 100Mi
+  livenessProbe:
+    failureThreshold: 3
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 1
+  readinessProbe:
+    failureThreshold: 3
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    successThreshold: 1
+    timeoutSeconds: 1
+  nodeSelector:
+    kubernetes.io/os: linux
+  affinity: {}
+  tolerations: []
+  topologySpreadConstraints: []
+  podLabels: {}
+  serviceLabels: {}
+  image:
+    repository: quay.io/jetstack/cert-manager-webhook
+    pullPolicy: IfNotPresent
+  serviceAccount:
+    create: true
+    automountServiceAccountToken: true
+  securePort: 10250
+  hostNetwork: false
+  serviceType: ClusterIP
+  url: {}
+cainjector:
+  enabled: true
+  replicaCount: 1
+  strategy: {}
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+  extraArgs: []
+  resources:
+    requests:
+      cpu: 10m
+      memory: 34Mi
+    limits:
+      cpu: 50m
+      memory: 100Mi
+  nodeSelector:
+    kubernetes.io/os: linux
+  affinity: {}
+  tolerations: []
+  topologySpreadConstraints: []
+  podLabels: {}
+  image:
+    repository: quay.io/jetstack/cert-manager-cainjector
+    pullPolicy: IfNotPresent
+  serviceAccount:
+    create: true
+    automountServiceAccountToken: true
+startupapicheck:
+  enabled: true
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+  timeout: 1m
+  backoffLimit: 4
+  jobAnnotations:
+    helm.sh/hook: post-install
+    helm.sh/hook-weight: '1'
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+  extraArgs: []
+  resources:
+    requests:
+      cpu: 10m
+      memory: 34Mi
+    limits:
+      cpu: 50m
+      memory: 100Mi
+  nodeSelector:
+    kubernetes.io/os: linux
+  affinity: {}
+  tolerations: []
+  podLabels: {}
+  image:
+    repository: quay.io/jetstack/cert-manager-ctl
+    pullPolicy: a
+  rbac:
+    annotations:
+      helm.sh/hook: post-install
+      helm.sh/hook-weight: '-5'
+      helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+  serviceAccount:
+    create: true
+    annotations:
+      helm.sh/hook: post-install
+      helm.sh/hook-weight: '-5'
+      helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+    automountServiceAccountToken: true

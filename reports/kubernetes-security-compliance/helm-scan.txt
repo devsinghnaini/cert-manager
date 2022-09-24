@@ -1,0 +1,26 @@
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Controls: 43 (Failed: 12, Excluded: 0, Skipped: 0)
+Failed Resources by Severity: Critical — 0, High — 11, Medium — 38, Low — 8
+
++----------+---------------------------------------------+------------------+--------------------+---------------+--------------+
+| SEVERITY |                CONTROL NAME                 | FAILED RESOURCES | EXCLUDED RESOURCES | ALL RESOURCES | % RISK-SCORE |
++----------+---------------------------------------------+------------------+--------------------+---------------+--------------+
+| High     | Forbidden Container Registries              |        4         |         0          |       4       |     100%     |
+| High     | List Kubernetes secrets                     |        7         |         0          |      14       |     50%      |
+| Medium   | Access container service account            |        14        |         0          |      14       |     100%     |
+| Medium   | Automatic mapping of service account        |        8         |         0          |       8       |     100%     |
+| Medium   | Configured liveness probe                   |        3         |         0          |       4       |     75%      |
+| Medium   | Data Destruction                            |        4         |         0          |      14       |     29%      |
+| Medium   | Images from allowed registry                |        4         |         0          |       4       |     100%     |
+| Medium   | Ingress and Egress blocked                  |        4         |         0          |       4       |     100%     |
+| Medium   | Malicious admission controller (mutating)   |        1         |         0          |       1       |     100%     |
+| Low      | Configured readiness probe                  |        3         |         0          |       4       |     75%      |
+| Low      | Immutable container filesystem              |        4         |         0          |       4       |     100%     |
+| Low      | Malicious admission controller (validating) |        1         |         0          |       1       |     100%     |
++----------+---------------------------------------------+------------------+--------------------+---------------+--------------+
+|          |              RESOURCE SUMMARY               |        24        |         0          |      25       |    22.18%    |
++----------+---------------------------------------------+------------------+--------------------+---------------+--------------+
+FRAMEWORKS: DevOpsBest (risk: 12.80), AllControls (risk: 22.18), ArmoBest (risk: 16.67), NSA (risk: 15.97), MITRE (risk: 22.57)
+

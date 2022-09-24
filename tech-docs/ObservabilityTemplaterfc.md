@@ -14,6 +14,7 @@
 * [Visualization of logs using Signoz](#visualization-of-logs-using-signoz)
 * [Differnet Log Modes Availability](#different-log-modes-availability)
 * [Log Format Description](#log-format-description) 
+* [Alerting using Opentelemetry and Signoz](#alerting-using-opentelemetry-and-signoz)
 
 ### Auto Instrumentation using OpenTelemtry
 
@@ -26,3 +27,5 @@
 ### Differnet Log Modes Availability
 
 ### Log Format Description
+
+### Alerting using Opentelemetry and Signoz
